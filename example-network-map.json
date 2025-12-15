@@ -1,0 +1,72 @@
+{
+  "networkName": "Home Lab",
+  "networkCidr": "10.0.0.0/24",
+  "gateway": "10.0.0.1",
+  "resources": [
+    {
+      "id": "res_example_firewall",
+      "hostname": "firewall",
+      "ip": "10.0.0.1",
+      "description": "OPNsense firewall and router",
+      "aliases": ["router", "gateway", "opnsense"],
+      "os": "OPNsense",
+      "services": ["Firewall", "Router", "DHCP", "DNS"],
+      "sshUser": "root",
+      "sshPort": 22,
+      "lastUpdated": "2025-12-15T00:00:00.000Z"
+    },
+    {
+      "id": "res_example_homeassistant",
+      "hostname": "homeassistant",
+      "ip": "10.0.0.3",
+      "description": "Home Assistant server",
+      "aliases": ["ha", "hass"],
+      "os": "Home Assistant OS",
+      "services": ["Home Assistant", "SSH"],
+      "sshPort": 22222,
+      "lastUpdated": "2025-12-15T00:00:00.000Z"
+    },
+    {
+      "id": "res_example_vm",
+      "hostname": "ubuntu-vm",
+      "ip": "10.0.0.4",
+      "description": "Ubuntu virtual machine",
+      "aliases": ["vm", "ubuntu"],
+      "os": "Ubuntu 24.04 LTS",
+      "services": ["SSH", "Docker"],
+      "sshUser": "admin",
+      "lastUpdated": "2025-12-15T00:00:00.000Z"
+    },
+    {
+      "id": "res_example_nas",
+      "hostname": "nas",
+      "ip": "10.0.0.50",
+      "description": "Network attached storage",
+      "aliases": ["storage", "backup"],
+      "os": "TrueNAS Scale",
+      "services": ["NFS", "SMB", "SSH", "rsync"],
+      "sshUser": "root",
+      "lastUpdated": "2025-12-15T00:00:00.000Z"
+    },
+    {
+      "id": "res_example_workstation",
+      "hostname": "workstation",
+      "ip": "10.0.0.6",
+      "description": "AMD AI workstation with ROCm",
+      "aliases": ["amd-server", "ai-server"],
+      "os": "Ubuntu 25.10",
+      "services": ["SSH", "Docker", "Ollama", "ComfyUI", "Whisper"],
+      "sshUser": "daniel",
+      "metadata": {
+        "gpu": "AMD Radeon RX 7700 XT",
+        "rocm": "6.3.0"
+      },
+      "lastUpdated": "2025-12-15T00:00:00.000Z"
+    }
+  ],
+  "metadata": {
+    "created": "2025-12-15T00:00:00.000Z",
+    "lastModified": "2025-12-15T00:00:00.000Z",
+    "version": "1.0.0"
+  }
+}
