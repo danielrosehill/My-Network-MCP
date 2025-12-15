@@ -30,23 +30,10 @@ This essentially creates a network-level SSH alias map for the agent to use when
 ### Prerequisites
 
 - Node.js 18 or higher
-- npm
 
 ### Quick Start (Recommended)
 
-Install via npm:
-
-```bash
-npm install -g my-network-mcp
-```
-
-Or use npx without installation:
-
-```bash
-npx my-network-mcp
-```
-
-### Setup
+The easiest way to use My Network MCP is via `npx` - no installation required:
 
 1. **Add to Claude Desktop config:**
 
@@ -66,37 +53,47 @@ npx my-network-mcp
    }
    ```
 
-   **Or if you installed globally:**
-   ```json
-   {
-     "mcpServers": {
-       "my-network": {
-         "command": "my-network-mcp"
-       }
-     }
-   }
-   ```
+### Alternative: Global Installation
 
-2. **Configure network map location (optional):**
+If you prefer to install globally:
 
-   By default, the network map is stored at `~/.config/my-network-mcp/network-map.json`
+```bash
+npm install -g my-network-mcp
+```
 
-   To use a custom location, set the `NETWORK_MAP_PATH` environment variable:
-   ```json
-   {
-     "mcpServers": {
-       "my-network": {
-         "command": "npx",
-         "args": ["-y", "my-network-mcp"],
-         "env": {
-           "NETWORK_MAP_PATH": "/path/to/custom/network-map.json"
-         }
-       }
-     }
-   }
-   ```
+Then configure with:
+```json
+{
+  "mcpServers": {
+    "my-network": {
+      "command": "my-network-mcp"
+    }
+  }
+}
+```
 
-3. **Restart Claude Desktop**
+### Configuration Options
+
+**Custom network map location (optional):**
+
+By default, the network map is stored at `~/.config/my-network-mcp/network-map.json`
+
+To use a custom location, set the `NETWORK_MAP_PATH` environment variable:
+```json
+{
+  "mcpServers": {
+    "my-network": {
+      "command": "npx",
+      "args": ["-y", "my-network-mcp"],
+      "env": {
+        "NETWORK_MAP_PATH": "/path/to/custom/network-map.json"
+      }
+    }
+  }
+}
+```
+
+**After configuration, restart Claude Desktop to load the MCP server.**
 
 ### Install from Source (Development)
 
@@ -165,6 +162,7 @@ Add a new network resource to the map.
 - `services`: Installed services
 - `sshUser`: SSH username
 - `sshPort`: SSH port (default: 22)
+- `metadata`: Additional key-value pairs for custom data
 
 **Example:**
 > Claude, add a new resource:
@@ -172,6 +170,7 @@ Add a new network resource to the map.
 > - ip: 10.0.0.10
 > - description: DNS ad blocker
 > - services: DNS, Web UI
+> - metadata: {"version": "5.18", "location": "basement"}
 
 #### `update_resource`
 Update an existing resource. Use the resource ID from `show_network_map`.
@@ -190,6 +189,13 @@ Set network-level information (name, CIDR, gateway).
 
 **Example:**
 > Set network name to "Home Lab" and CIDR to 10.0.0.0/24
+
+#### `list_services`
+List all unique services, operating systems, and SSH configurations across your network. Provides a quick overview of what's deployed.
+
+**Example:**
+> Claude, show me all services running on my network
+> What operating systems are in use?
 
 ### Resource as MCP Resource
 
@@ -256,7 +262,7 @@ The network map is stored as JSON with the following structure:
   "metadata": {
     "created": "...",
     "lastModified": "...",
-    "version": "1.0.0"
+    "version": "1.1.0"
   }
 }
 ```

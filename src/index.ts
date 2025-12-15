@@ -19,7 +19,7 @@ const storage = new NetworkMapStorage();
 const server = new Server(
   {
     name: 'my-network-mcp',
-    version: '1.0.0',
+    version: '1.1.0',
   },
   {
     capabilities: {
@@ -97,6 +97,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               type: 'number',
               description: 'SSH port (default: 22)',
             },
+            metadata: {
+              type: 'object',
+              description: 'Additional metadata as key-value pairs',
+              additionalProperties: { type: 'string' },
+            },
           },
           required: ['hostname', 'ip'],
         },
@@ -125,6 +130,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             sshUser: { type: 'string' },
             sshPort: { type: 'number' },
+            metadata: {
+              type: 'object',
+              description: 'Additional metadata as key-value pairs',
+              additionalProperties: { type: 'string' },
+            },
           },
           required: ['id'],
         },
@@ -162,6 +172,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               description: 'Gateway/router IP',
             },
           },
+        },
+      },
+      {
+        name: 'list_services',
+        description: 'List all unique services, operating systems, and SSH configurations across the network',
+        inputSchema: {
+          type: 'object',
+          properties: {},
         },
       },
     ],
@@ -231,6 +249,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           services: args?.services as string[] | undefined,
           sshUser: args?.sshUser as string | undefined,
           sshPort: args?.sshPort as number | undefined,
+          metadata: args?.metadata as Record<string, string> | undefined,
           lastUpdated: new Date().toISOString(),
         };
 
@@ -269,6 +288,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (args?.services) resource.services = args.services as string[];
         if (args?.sshUser !== undefined) resource.sshUser = args.sshUser as string;
         if (args?.sshPort !== undefined) resource.sshPort = args.sshPort as number;
+        if (args?.metadata !== undefined) resource.metadata = args.metadata as Record<string, string>;
         resource.lastUpdated = new Date().toISOString();
 
         await storage.save(map);
@@ -323,6 +343,81 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: 'text',
               text: 'Network information updated',
+            },
+          ],
+        };
+      }
+
+      case 'list_services': {
+        const map = await storage.load();
+
+        if (map.resources.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: 'No resources in network map.',
+              },
+            ],
+          };
+        }
+
+        // Collect unique services, OSes, and SSH configs
+        const services = new Set<string>();
+        const operatingSystems = new Set<string>();
+        const sshConfigs: Array<{ hostname: string; user?: string; port?: number }> = [];
+
+        for (const resource of map.resources) {
+          if (resource.services) {
+            resource.services.forEach(s => services.add(s));
+          }
+          if (resource.os) {
+            operatingSystems.add(resource.os);
+          }
+          if (resource.sshUser || resource.sshPort) {
+            sshConfigs.push({
+              hostname: resource.hostname,
+              user: resource.sshUser,
+              port: resource.sshPort,
+            });
+          }
+        }
+
+        let output = '# Network Services Overview\n\n';
+
+        output += `## Unique Services (${services.size})\n`;
+        if (services.size > 0) {
+          output += Array.from(services).sort().map(s => `- ${s}`).join('\n') + '\n';
+        } else {
+          output += 'No services defined\n';
+        }
+
+        output += `\n## Operating Systems (${operatingSystems.size})\n`;
+        if (operatingSystems.size > 0) {
+          output += Array.from(operatingSystems).sort().map(os => `- ${os}`).join('\n') + '\n';
+        } else {
+          output += 'No operating systems defined\n';
+        }
+
+        output += `\n## SSH Configurations (${sshConfigs.length})\n`;
+        if (sshConfigs.length > 0) {
+          output += sshConfigs
+            .map(cfg => {
+              let line = `- **${cfg.hostname}**`;
+              if (cfg.user) line += ` - User: ${cfg.user}`;
+              if (cfg.port) line += ` - Port: ${cfg.port}`;
+              return line;
+            })
+            .join('\n');
+        } else {
+          output += 'No SSH configurations defined\n';
+        }
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: output,
             },
           ],
         };
@@ -428,6 +523,9 @@ function formatResources(resources: NetworkResource[]): string {
       }
       if (r.sshUser) output += `- **SSH User:** ${r.sshUser}\n`;
       if (r.sshPort) output += `- **SSH Port:** ${r.sshPort}\n`;
+      if (r.metadata && Object.keys(r.metadata).length > 0) {
+        output += `- **Metadata:** ${JSON.stringify(r.metadata)}\n`;
+      }
       if (r.lastUpdated) {
         output += `- **Last Updated:** ${new Date(r.lastUpdated).toLocaleString()}\n`;
       }
