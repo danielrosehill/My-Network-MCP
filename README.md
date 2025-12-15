@@ -30,27 +30,25 @@ This essentially creates a network-level SSH alias map for the agent to use when
 ### Prerequisites
 
 - Node.js 18 or higher
-- npm or yarn
+- npm
+
+### Quick Start (Recommended)
+
+Install via npm:
+
+```bash
+npm install -g my-network-mcp
+```
+
+Or use npx without installation:
+
+```bash
+npx my-network-mcp
+```
 
 ### Setup
 
-1. **Clone and build:**
-   ```bash
-   cd ~/repos/github/My-Network-MCP
-   npm install
-   npm run build
-   ```
-
-2. **Configure network map location (optional):**
-
-   By default, the network map is stored at `~/.config/my-network-mcp/network-map.json`
-
-   To use a custom location, set the `NETWORK_MAP_PATH` environment variable:
-   ```bash
-   export NETWORK_MAP_PATH=/path/to/your/network-map.json
-   ```
-
-3. **Add to Claude Desktop config:**
+1. **Add to Claude Desktop config:**
 
    Edit your Claude Desktop MCP settings file:
    - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -61,20 +59,35 @@ This essentially creates a network-level SSH alias map for the agent to use when
    {
      "mcpServers": {
        "my-network": {
-         "command": "node",
-         "args": ["/home/daniel/repos/github/My-Network-MCP/dist/index.js"]
+         "command": "npx",
+         "args": ["-y", "my-network-mcp"]
        }
      }
    }
    ```
 
-   Or using environment variable:
+   **Or if you installed globally:**
    ```json
    {
      "mcpServers": {
        "my-network": {
-         "command": "node",
-         "args": ["/home/daniel/repos/github/My-Network-MCP/dist/index.js"],
+         "command": "my-network-mcp"
+       }
+     }
+   }
+   ```
+
+2. **Configure network map location (optional):**
+
+   By default, the network map is stored at `~/.config/my-network-mcp/network-map.json`
+
+   To use a custom location, set the `NETWORK_MAP_PATH` environment variable:
+   ```json
+   {
+     "mcpServers": {
+       "my-network": {
+         "command": "npx",
+         "args": ["-y", "my-network-mcp"],
          "env": {
            "NETWORK_MAP_PATH": "/path/to/custom/network-map.json"
          }
@@ -83,7 +96,30 @@ This essentially creates a network-level SSH alias map for the agent to use when
    }
    ```
 
-4. **Restart Claude Desktop**
+3. **Restart Claude Desktop**
+
+### Install from Source (Development)
+
+If you want to modify the code or contribute:
+
+```bash
+git clone https://github.com/danielrosehill/My-Network-MCP.git
+cd My-Network-MCP
+npm install
+npm run build
+```
+
+Then configure with the local path:
+```json
+{
+  "mcpServers": {
+    "my-network": {
+      "command": "node",
+      "args": ["/path/to/My-Network-MCP/dist/index.js"]
+    }
+  }
+}
+```
 
 ## Usage
 
