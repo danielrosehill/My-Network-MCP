@@ -1,4 +1,8 @@
-# My Network MCP (Planning Notes)
+# My Network MCP
+
+[![npm version](https://img.shields.io/npm/v/my-network-mcp.svg)](https://www.npmjs.com/package/my-network-mcp)
+[![npm downloads](https://img.shields.io/npm/dt/my-network-mcp.svg)](https://www.npmjs.com/package/my-network-mcp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## The Motivator / Use-Case
 

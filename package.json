@@ -7,19 +7,40 @@
   "bin": {
     "my-network-mcp": "dist/index.js"
   },
+  "files": [
+    "dist",
+    "example-network-map.json",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "mcp",
     "network",
     "ssh",
-    "homelab"
+    "homelab",
+    "model-context-protocol",
+    "network-map",
+    "claude",
+    "ai-tools"
   ],
   "author": "Daniel Rosehill",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danielrosehill/My-Network-MCP.git"
+  },
+  "homepage": "https://github.com/danielrosehill/My-Network-MCP#readme",
+  "bugs": {
+    "url": "https://github.com/danielrosehill/My-Network-MCP/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.6.0"
   },
