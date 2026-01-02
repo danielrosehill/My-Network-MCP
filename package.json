@@ -1,6 +1,6 @@
 {
   "name": "my-network-mcp",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "MCP server for managing local network resource maps",
   "type": "module",
   "main": "dist/index.js",
@@ -26,7 +26,9 @@
     "model-context-protocol",
     "network-map",
     "claude",
-    "ai-tools"
+    "ai-tools",
+    "streamable-http",
+    "mcp-server"
   ],
   "author": "Daniel Rosehill",
   "license": "MIT",
@@ -42,10 +44,14 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.6.0"
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "express": "^4.21.0",
+    "cors": "^2.8.5"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/express": "^5.0.0",
+    "@types/cors": "^2.8.17",
     "typescript": "^5.0.0"
   }
 }

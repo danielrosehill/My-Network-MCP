@@ -3,152 +3,147 @@
 [![npm version](https://img.shields.io/npm/v/my-network-mcp.svg)](https://www.npmjs.com/package/my-network-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+A Model Context Protocol (MCP) server that provides AI agents with network topology information. Deploy it as an HTTP service for use with MCP aggregators, or run standalone.
+
 ## The Motivator / Use-Case
 
 Agentic AI tools like Claude Code are incredibly useful for local system administration. They can also be used to manage remote systems.
 
 SSH provides the fundamental backbone of connectivity between computing resources.
 
-Some MCP servers exist to standardize SSH operations, but in many cases these really just create bloat. Agentic AI tools have generally good innate knowledge of SSH.
+To perform SSH operations, AI agents need a network map. This can be manually provided in context or instructed by reference to your SSH aliases. But to support easy use across different clients, it makes more sense to have this configuration provided by a centrally managed MCP server.
 
-To perform SSH operations, AI agents need a network map.
+The idea of My Network MCP is to align with the principle that MCP tools work best when their purpose is narrow and their tool definition is therefore modest. The sole purpose of this MCP server is to provide a user-maintained list of local network resources.
 
-This can be manually provided in context or instructed by reference to your SSH aliases. But to support easy use across different clients, it makes more sense to have this configuration provided by a centrally managed MCP server on the local area network.
+## v2.0 - Streamable HTTP Transport
 
-The idea of My Network MCP is to align with the principle that MCP tools work best when their purpose is narrow and their tool definition is therefore modest. The sole purpose of this MCP server is to provide a user-maintained list of local network resources to avoid having to repeatedly explain: "connect to Y, that's at Z."
+Version 2.0 refactored from stdio transport to **Streamable HTTP transport**, making it suitable for deployment on MCP aggregation servers like MetaMCP. The server now runs as an HTTP service with full session management.
 
-In a more complicated implementation, the MCP might support environment variables for understanding authentication. This simple version is intended for use in a home lab environment. The assumption is that the clients have mutual SSH authentication configured.
-
-## Implementation
-
-Another assumption baked into this is that the pool of resources on the local network is fairly static. The idea is that the user can define their core network parameters, which are also assumed to be static, and just maintain static IP addresses for resources that are frequently accessed by agents.
-
-This essentially creates a network-level SSH alias map for the agent to use when resolving questions about what resource does what. Unlike a standard SSH config alias map, however, this concept allows the user to provide additional verbosity: descriptive names, synonyms for specific resources, operating systems, installed services, and other metadata.
-
-## Installation
+## Installation & Deployment
 
 ### Prerequisites
 
 - Node.js 18 or higher
 
-### Quick Start (Recommended)
+### Option 1: Deploy with Docker (Recommended for Servers)
 
-The easiest way to use My Network MCP is via `npx` - no installation required:
+```dockerfile
+FROM node:20-slim
+WORKDIR /app
+RUN npm install -g my-network-mcp
+EXPOSE 3000
+CMD ["my-network-mcp"]
+```
 
-1. **Add to Claude Desktop config:**
+Build and run:
+```bash
+docker build -t my-network-mcp .
+docker run -d -p 3000:3000 -v ~/.config/my-network-mcp:/root/.config/my-network-mcp my-network-mcp
+```
 
-   Edit your Claude Desktop MCP settings file:
-   - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - **Linux:** `~/.config/Claude/claude_desktop_config.json`
-
-   Add the server configuration:
-   ```json
-   {
-     "mcpServers": {
-       "my-network": {
-         "command": "npx",
-         "args": ["-y", "my-network-mcp"]
-       }
-     }
-   }
-   ```
-
-### Alternative: Global Installation
-
-If you prefer to install globally:
+### Option 2: Run Directly with npm/npx
 
 ```bash
+# Install globally
 npm install -g my-network-mcp
+
+# Run the server
+my-network-mcp
 ```
 
-Then configure with:
-```json
-{
-  "mcpServers": {
-    "my-network": {
-      "command": "my-network-mcp"
-    }
-  }
-}
+Or run without installing:
+```bash
+npx my-network-mcp
 ```
 
-### Configuration Options
-
-**Custom network map location (optional):**
-
-By default, the network map is stored at `~/.config/my-network-mcp/network-map.json`
-
-To use a custom location, set the `NETWORK_MAP_PATH` environment variable:
-```json
-{
-  "mcpServers": {
-    "my-network": {
-      "command": "npx",
-      "args": ["-y", "my-network-mcp"],
-      "env": {
-        "NETWORK_MAP_PATH": "/path/to/custom/network-map.json"
-      }
-    }
-  }
-}
-```
-
-**After configuration, restart Claude Desktop to load the MCP server.**
-
-### Install from Source (Development)
-
-If you want to modify the code or contribute:
+### Option 3: Install from Source
 
 ```bash
 git clone https://github.com/danielrosehill/My-Network-MCP.git
 cd My-Network-MCP
 npm install
 npm run build
+npm start
 ```
 
-Then configure with the local path:
+## Configuration
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MCP_PORT` | `3000` | HTTP port to listen on |
+| `MCP_HOST` | `0.0.0.0` | Host to bind to |
+| `NETWORK_MAP_PATH` | `~/.config/my-network-mcp/network-map.json` | Path to network map file |
+
+### Example with Custom Configuration
+
+```bash
+MCP_PORT=8080 MCP_HOST=127.0.0.1 NETWORK_MAP_PATH=/data/network.json my-network-mcp
+```
+
+## Adding to MCP Aggregators
+
+### MetaMCP / Generic Streamable HTTP
+
+Add this server to your MCP aggregator with the following configuration:
+
 ```json
 {
-  "mcpServers": {
-    "my-network": {
-      "command": "node",
-      "args": ["/path/to/My-Network-MCP/dist/index.js"]
-    }
-  }
+  "name": "my-network",
+  "transport": "streamable-http",
+  "url": "http://your-server:3000/mcp"
 }
 ```
 
-## Usage
+### Example: MetaMCP Configuration
 
-### Initial Setup
+```json
+{
+  "servers": [
+    {
+      "name": "my-network",
+      "transport": "streamable-http",
+      "url": "http://10.0.0.6:3000/mcp",
+      "description": "Local network resource map"
+    }
+  ]
+}
+```
 
-The first time you use the MCP, you'll need to populate your network map. You can either:
+## API Endpoints
 
-1. **Use the example as a starting point:**
-   ```bash
-   cp example-network-map.json ~/.config/my-network-mcp/network-map.json
-   ```
-   Then edit it to match your network.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/mcp` | JSON-RPC requests (MCP protocol) |
+| `GET` | `/mcp` | SSE stream for server notifications |
+| `DELETE` | `/mcp` | Session termination |
+| `GET` | `/health` | Health check endpoint |
 
-2. **Let Claude build it for you** using the MCP tools (see below).
+### Health Check
 
-### Available Tools
+```bash
+curl http://localhost:3000/health
+# {"status":"ok","service":"my-network-mcp","version":"2.0.0"}
+```
 
-#### `show_network_map`
+## Available Tools
+
+### `show_network_map`
 Display all network resources in your network map.
 
-**Example:**
+**Example prompt:**
 > Claude, show me my network map
 
-#### `query_resource`
+### `query_resource`
 Search for resources by hostname, IP, alias, OS, or service.
 
-**Example:**
+**Example prompts:**
 > Find all resources running Docker
 > What's the IP of my NAS?
 > Show me all Ubuntu machines
 
-#### `add_resource`
+### `add_resource`
 Add a new network resource to the map.
 
 **Required fields:**
@@ -164,42 +159,53 @@ Add a new network resource to the map.
 - `sshPort`: SSH port (default: 22)
 - `metadata`: Additional key-value pairs for custom data
 
-**Example:**
+**Example prompt:**
 > Claude, add a new resource:
 > - hostname: pi-hole
 > - ip: 10.0.0.10
 > - description: DNS ad blocker
 > - services: DNS, Web UI
-> - metadata: {"version": "5.18", "location": "basement"}
 
-#### `update_resource`
+### `update_resource`
 Update an existing resource. Use the resource ID from `show_network_map`.
 
-**Example:**
+**Example prompt:**
 > Update resource res_12345 to add SSH service
 
-#### `delete_resource`
+### `delete_resource`
 Remove a resource from the map by ID.
 
-**Example:**
+**Example prompt:**
 > Delete resource res_12345
 
-#### `set_network_info`
+### `set_network_info`
 Set network-level information (name, CIDR, gateway).
 
-**Example:**
+**Example prompt:**
 > Set network name to "Home Lab" and CIDR to 10.0.0.0/24
 
-#### `list_services`
-List all unique services, operating systems, and SSH configurations across your network. Provides a quick overview of what's deployed.
+### `list_services`
+List all unique services, operating systems, and SSH configurations across your network.
 
-**Example:**
+**Example prompts:**
 > Claude, show me all services running on my network
 > What operating systems are in use?
 
-### Resource as MCP Resource
+## MCP Resource
 
-The network map is also exposed as an MCP resource at `network://map`, allowing Claude to read the entire map as JSON when needed.
+The network map is also exposed as an MCP resource at `network://map`, allowing AI agents to read the entire map as JSON.
+
+## Initial Setup
+
+The first time you use the MCP, you'll need to populate your network map:
+
+1. **Use the example as a starting point:**
+   ```bash
+   cp example-network-map.json ~/.config/my-network-mcp/network-map.json
+   ```
+   Then edit it to match your network.
+
+2. **Let Claude build it for you** using the MCP tools.
 
 ## Example Workflows
 
@@ -220,24 +226,9 @@ The network map is also exposed as an MCP resource at `network://map`, allowing 
 
 The MCP provides context so Claude knows where to connect without you having to specify IPs repeatedly.
 
-## File Structure
-
-```
-.
-├── src/
-│   ├── index.ts        # Main MCP server
-│   ├── types.ts        # TypeScript type definitions
-│   └── storage.ts      # Network map storage manager
-├── dist/               # Compiled JavaScript (generated)
-├── example-network-map.json  # Example network configuration
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
 ## Network Map Format
 
-The network map is stored as JSON with the following structure:
+The network map is stored as JSON:
 
 ```json
 {
@@ -262,12 +253,35 @@ The network map is stored as JSON with the following structure:
   "metadata": {
     "created": "...",
     "lastModified": "...",
-    "version": "1.1.0"
+    "version": "2.0.0"
   }
 }
 ```
 
+## File Structure
+
+```
+.
+├── src/
+│   ├── index.ts        # HTTP server & MCP handlers
+│   ├── types.ts        # TypeScript type definitions
+│   └── storage.ts      # Network map storage manager
+├── dist/               # Compiled JavaScript (generated)
+├── example-network-map.json
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+## Migration from v1.x
+
+If upgrading from v1.x (stdio transport):
+
+1. The server now runs as an HTTP service instead of stdio
+2. Update your MCP client configuration to use streamable HTTP transport
+3. Network map format is unchanged - no data migration needed
+4. Set `MCP_PORT` and `MCP_HOST` environment variables as needed
+
 ## License
 
 MIT
-
